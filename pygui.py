@@ -7,6 +7,7 @@ class static_object():
         self.w = (round(screen_x*w/100),w)
         self.h = (round(screen_y*h/100),h)
         self.color = color
+        self.minimized=False
 
         self.FONT = pygame.font.Font(font, font_size)
         self.raw_text = text
@@ -25,6 +26,8 @@ class static_object():
             self.border_px = None
 
     def process(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
         self.x = (round(screen_x*self.x[1]/100*scale_x+offset_x),self.x[1])
         #screen*scale/100=pixel
         #scale=pixel*100/screen
@@ -63,7 +66,7 @@ class static_object():
         self.text = self.FONT.render(text, True, font_color)
 
     def change_image(self, image):
-        self.orig_image = self.orig_image = pygame.image.load(image)
+        self.orig_image = pygame.image.load(image)
 
     def set_pos(self, x,y,screen_x,screen_y):
         self.x = (x,round(x*100/screen_x))
@@ -71,14 +74,29 @@ class static_object():
         #screen*scale/100=pixel
         #scale=pixel*100/screen
 
+    def set_relative_pos(self, x,y,screen_x,screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        self.x = (round(screen_x*x[1]/100*scale_x+offset_x),x[1])
+        self.y = (round(screen_y*y[1]/100*scale_y+offset_y),y[1])
+
     def get_pos(self):
         return (self.x[0],self.y[0])
 
-    def onClick(self, surface, screen_x, screen_y):
-        pass
+    def onClick(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        return
+    
+    def get_self(self):
+        return self
+    
+    def hide(self):
+        self.minimized=True
+
+    def show(self):
+        self.minimized=False
 
 class click_object(static_object):
     def process(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
         super().process(surface, screen_x, screen_y, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
         pos = pygame.mouse.get_pos()
         if pos[0] > self.x[0] and pos[0] < self.x[0] + self.w[0] and pos[1] > self.y[0] and pos[1] < self.y[0] + self.h[0]:
@@ -90,8 +108,10 @@ class click_object(static_object):
 
         return data
     
-    def onClick(self, surface, screen_x, screen_y):
-        return self.process(surface, screen_x, screen_y)
+    def onClick(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
+        return self.process(surface, screen_x, screen_y, scale_x,scale_y,offset_x,offset_y)
 
 class variable_object(click_object):
     def __init__(self, x, y, w, h, screen_x, screen_y, color, text, font, font_size, font_color, value,scale_x=1,scale_y=1,offset_x=0,offset_y=0):
@@ -100,6 +120,9 @@ class variable_object(click_object):
 
     def get_value(self):
         return self.value
+    
+    def set_value(self, value):
+        self.value = value
 
 class base_toggle_button(variable_object):
     def __init__(self, x, y, w, h, screen_x, screen_y, color, toggle_color, value, text = '', font = 'freesansbold.ttf', font_size = 10, font_color = (0,0,0), scale_x=1,scale_y=1,offset_x=0,offset_y=0):
@@ -108,8 +131,10 @@ class base_toggle_button(variable_object):
         self.base_color = color
         self.value = value
 
-    def onClick(self, surface, screen_x, screen_y):
-        data = super().process(surface, screen_x, screen_y)
+    def onClick(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
+        data = super().process(surface, screen_x, screen_y, scale_x,scale_y,offset_x,offset_y)
         if data[0]:
             self.value = not self.value
 
@@ -126,6 +151,8 @@ class hover_toggle_button(base_toggle_button):
         self.true_hover_color = true_hover_color
 
     def process(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
         data = super().process(surface, screen_x, screen_y, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
 
         if self.value:
@@ -147,6 +174,8 @@ class momentary_button(base_toggle_button):
         self.function = function
 
     def process(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
         data = super().process(surface, screen_x, screen_y, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
 
         if not data[0] or not data[1][0]:
@@ -155,8 +184,10 @@ class momentary_button(base_toggle_button):
 
         return data
 
-    def onClick(self, surface, screen_x, screen_y, args=None):
-        data = super().process(surface, screen_x, screen_y)
+    def onClick(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0, args=None):
+        if self.minimized:
+            return
+        data = super().process(surface, screen_x, screen_y, scale_x,scale_y,offset_x,offset_y)
 
         if data[0]:
             self.value = True
@@ -186,35 +217,27 @@ class Container(rectangle):
     def __init__(self,x, y, w, h, screen_x, screen_y, color = None, border_px = None, border_color=(0,0,0), scale_x=1,scale_y=1,offset_x=0,offset_y=0):
         super().__init__(x, y, w, h, screen_x, screen_y, color, border_px=border_px,border_color=border_color, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
         self.objects = {}
-        self.minimized=False
 
     def process(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
-        if not self.minimized:
-            super().process(surface, screen_x, screen_y, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
-            for object in self.objects:
-                self.objects[object].process(surface, self.w[0], self.h[0],offset_x=self.x[0],offset_y=self.y[0])
-
-    def onClick(self, surface, screen_x, screen_y):
         if self.minimized:
             return
-        for value in self.objects.values():
-            value.onClick(surface, self.w[0], self.h[0])
-            try:
-                print(value.get_value())
-            except AttributeError:
-                pass
+        super().process(surface, screen_x, screen_y, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
+        for object in self.objects:
+            self.objects[object].process(surface, self.w[0], self.h[0],offset_x=self.x[0],offset_y=self.y[0])
+
+    def onClick(self, surface, screen_x, screen_y, scale_x=1,scale_y=1,offset_x=0,offset_y=0):
+        if self.minimized:
+            return
+        for object in self.objects:
+            #temp = self.objects[object]
+            #temp.onClick(surface, self.w[0], self.h[0],offset_x=self.x[0],offset_y=self.y[0])
+            self.objects[object].onClick(surface, self.w[0], self.h[0],offset_x=self.x[0],offset_y=self.y[0])
 
     def add_object(self, name, object):
         self.objects[name] = object
 
     def delete_object(self, name):
         del self.objects[name]
-
-    def minimize(self):
-        self.minimized=True
-
-    def maximize(self):
-        self.minimized=False
 
 class movable_container(Container):
     def __init__(self,x, y, w, h, screen_x, screen_y, top_border_size, top_border_color = None, top_border_title = '', color = None, border_px = None, border_color=(0,0,0), scale_x=1,scale_y=1,offset_x=0,offset_y=0):

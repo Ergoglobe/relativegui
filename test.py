@@ -51,8 +51,8 @@ hovertest = pygui.hover_toggle_button(1,6,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLO
 momentarytest = pygui.momentary_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'],COLOR['GREEN'],test, 'Moment')
 
 containertest = pygui.movable_container(50,50,50,50,SIZE[0],SIZE[1],5,COLOR['BLUE'],'Container',COLOR['GREY'])
+containertest.add_object('hover',pygui.hover_toggle_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover'))
 containertest.add_object('image',pygui.image(20, 20, 20, 20, SIZE[0],SIZE[1], 'satispower.png',5,COLOR['RED']))
-containertest.add_object('hover',pygui.hover_toggle_button(6,20,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover'))
 
 objects = [toggletest, hovertest, momentarytest, imagetest, containertest]
 
@@ -80,9 +80,9 @@ def main():
                     object.onClick(WINDOW,SIZE[0],SIZE[1])
 
         if toggletest.get_value():
-            containertest.minimize()
+            containertest.hide()
         else:
-            containertest.maximize()
+            containertest.show()
 
         draw_window()
 
