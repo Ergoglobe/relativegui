@@ -45,16 +45,22 @@ def test():
     else:
         momentarytest.change_text('Moment')
 
+    imagetest.flip_image(False,True)
+
 imagetest = pygui.image(20, 20, 20, 20, SIZE[0],SIZE[1], 'satispower.png',2,COLOR['RED'])
-toggletest = pygui.base_toggle_button(1,0,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False, 'Toggle')
-hovertest = pygui.hover_toggle_button(1,6,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover')
-momentarytest = pygui.momentary_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'],COLOR['GREEN'],test, 'Moment')
+toggletest = pygui.base_toggle_button(1,0,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False, 'Toggle',font_size=20)
+hovertest = pygui.hover_toggle_button(1,6,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover',font_size=20)
+momentarytest = pygui.momentary_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'],COLOR['GREEN'],test, 'Moment',font_size=20)
+circletest= pygui.circle(10,50,.5,SIZE[0],SIZE[1],COLOR['RED'])
 
-containertest = pygui.movable_container(50,50,50,50,SIZE[0],SIZE[1],5,COLOR['BLUE'],'Container',COLOR['GREY'])
-containertest.add_object('hover',pygui.hover_toggle_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover'))
+textboxtest = pygui.single_line_text_box(1,20,15,5,SIZE[0],SIZE[1],COLOR['RED'])
+
+containertest = pygui.movable_container(50,50,50,50,SIZE[0],SIZE[1],5,COLOR['BLUE'],'Container',COLOR['GREY'],top_border_font_size=20)
+containertest.add_object('hover',pygui.hover_toggle_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover',font_size=20))
 containertest.add_object('image',pygui.image(20, 20, 20, 20, SIZE[0],SIZE[1], 'satispower.png',5,COLOR['RED']))
+containertest.add_object('one__line',pygui.single_line_text_box(1,50,15,5,SIZE[0],SIZE[1],COLOR['RED']))
 
-objects = [toggletest, hovertest, momentarytest, imagetest, containertest]
+objects = [toggletest, hovertest, momentarytest, imagetest, textboxtest,circletest,containertest]
 
 def draw_window():
     WINDOW.fill(COLOR['BLACK'])
@@ -66,7 +72,6 @@ def main():
     running = True
     while running:
         clock.tick(TPS)
-        pressed = pygame.key.get_pressed()
 
         if WINDOW.get_size() != SIZE:
             SIZE = WINDOW.get_size()
@@ -77,7 +82,10 @@ def main():
                 break
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 for object in objects:
-                    object.onClick(WINDOW,SIZE[0],SIZE[1])
+                    object.onClick()
+            elif event.type == pygame.KEYDOWN:
+                for object in objects:
+                    object.onPress(event.key)
 
         if toggletest.get_value():
             containertest.hide()

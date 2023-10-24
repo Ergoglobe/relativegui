@@ -1,0 +1,13 @@
+static_object
+|click_object
+|-variable_object
+|--single_line_text_box
+|--base_toggle_button
+|---hover_toggle_button
+|---momentary_button
+|label
+|image
+|rectangle
+|-circle
+|-Container
+|--movable_container
