@@ -1,6 +1,6 @@
 import pygame, tree
 
-characters = ('a','b','c','d')
+characters = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0','-','=',',','.','/','\')
 
 class static_object():
     def __init__(self, x, y, w, h, screen_x, screen_y, color = None, text = '', font = 'freesansbold.ttf', font_size = 10, font_color = (0,0,0), image = None, border_px = None, border_color = (0,0,0), scale_x=1,scale_y=1,offset_x=0,offset_y=0):
