@@ -288,6 +288,8 @@ class single_line_text_box(variable_object):
                 self.change_text(self.raw_text+'A')
             else:
                 self.change_text(self.raw_text+'a')
+
+        return self.raw_text
 class Container(rectangle):
     def __init__(self,x, y, w, h, screen_x, screen_y, color = None, border_px = None, border_color=(0,0,0), scale_x=1,scale_y=1,offset_x=0,offset_y=0):
         super().__init__(x, y, w, h, screen_x, screen_y, color, border_px=border_px,border_color=border_color, scale_x=scale_x,scale_y=scale_y,offset_x=offset_x,offset_y=offset_y)
