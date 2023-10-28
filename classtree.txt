@@ -11,3 +11,4 @@ static_object
 |-circle
 |-Container
 |--movable_container
+display

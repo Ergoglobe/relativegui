@@ -53,7 +53,7 @@ hovertest = pygui.hover_toggle_button(1,6,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLO
 momentarytest = pygui.momentary_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'],COLOR['GREEN'],test, 'Moment',font_size=20)
 circletest= pygui.circle(10,50,.5,SIZE[0],SIZE[1],COLOR['RED'])
 
-textboxtest = pygui.single_line_text_box(1,20,15,5,SIZE[0],SIZE[1],COLOR['RED'])
+textboxtest = pygui.single_line_text_box(1,20,15,5,SIZE[0],SIZE[1],COLOR['RED'],font_size=20)
 
 containertest = pygui.movable_container(50,50,50,50,SIZE[0],SIZE[1],5,COLOR['BLUE'],'Container',COLOR['GREY'],top_border_font_size=20)
 containertest.add_object('hover',pygui.hover_toggle_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover',font_size=20))
@@ -85,7 +85,7 @@ def main():
                     object.onClick()
             elif event.type == pygame.KEYDOWN:
                 for object in objects:
-                    object.onPress(event.key)
+                    object.onPress(event.key,event.unicode)
 
         if toggletest.get_value():
             containertest.hide()

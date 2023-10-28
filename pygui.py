@@ -1,7 +1,5 @@
 import pygame, tree
 
-characters = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','1','2','3','4','5','6','7','8','9','0','-','=',',','.','/','\')
-
 class static_object():
     def __init__(self, x, y, w, h, screen_x, screen_y, color = None, text = '', font = 'freesansbold.ttf', font_size = 10, font_color = (0,0,0), image = None, border_px = None, border_color = (0,0,0), scale_x=1,scale_y=1,offset_x=0,offset_y=0):
         self.x = (round(screen_x*x/100),x)
@@ -105,8 +103,8 @@ class static_object():
     def onClick(self):
         return
     
-    def onPress(self,key):
-        return key
+    def onPress(self,key,unicode):
+        return key,unicode
     
     def get_self(self):
         return self
@@ -273,21 +271,22 @@ class single_line_text_box(variable_object):
         self.value = super().onClick()[0]
         return self.value
 
-    def onPress(self,key):
+    def onPress(self,key,unicode):
         if not self.value or self.minimized:
             return
         keys = pygame.key.get_pressed()
-        shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
-        ctrl = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]
-        #enter = keys[pygame.K_RETURN] or keys[pygame.K_KP_ENTER]
+        #shift = keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT]
+        #ctrl = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]
+        enter = keys[pygame.K_RETURN] or keys[pygame.K_KP_ENTER]
         
         if key == pygame.K_BACKSPACE:
             self.change_text(self.raw_text[:-1])
-        elif key == pygame.K_a:
-            if shift:
-                self.change_text(self.raw_text+'A')
-            else:
-                self.change_text(self.raw_text+'a')
+        elif enter:
+            self.value=False
+        else:
+            self.change_text(self.raw_text+unicode)
+            if self.text.get_width() > self.rect.w:
+                self.change_text(self.raw_text[:-1])
 
         return self.raw_text
 class Container(rectangle):
@@ -307,6 +306,12 @@ class Container(rectangle):
             return
         for object in self.objects:
             self.objects[object].onClick()
+
+    def onPress(self,key,unicode):
+        if self.minimized:
+            return
+        for object in self.objects:
+            self.objects[object].onPress(key,unicode)
 
     def add_object(self, name, object):
         self.objects[name] = object
@@ -341,3 +346,14 @@ class movable_container(Container):
 
         elif not data[1][0] and self.moving:
             self.moving=False
+
+class display():
+    def __init__(self,containers):
+        self.containers = containers
+        self.screen=0
+
+    def onClick(self):
+        self.containers[self.screen].onClick()
+
+    def onPress(self,key,unicode):
+        self.containers[self.screen].onPress(key,unicode)
