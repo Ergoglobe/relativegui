@@ -1,4 +1,4 @@
-import pygame, pygui
+import pygame, pygui,time
 
 pygame.init()
 
@@ -51,16 +51,25 @@ imagetest = pygui.image(20, 20, 20, 20, SIZE[0],SIZE[1], 'satispower.png',2,COLO
 toggletest = pygui.base_toggle_button(1,0,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False, 'Toggle',font_size=20)
 hovertest = pygui.hover_toggle_button(1,6,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover',font_size=20)
 momentarytest = pygui.momentary_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'],COLOR['GREEN'],test, 'Moment',font_size=20)
-circletest= pygui.circle(10,50,.5,SIZE[0],SIZE[1],COLOR['RED'])
-
+hovermoment = pygui.hover_momentary_button(10,12, 5, 5, SIZE[0], SIZE[1], COLOR['RED'], COLOR['GREEN'], test, COLOR['MAROON'],'HoverMoment')
+#circletest= pygui.circle(10,50,.5,SIZE[0],SIZE[1],COLOR['RED'])
+radiolabels = {
+    '0_0':('1',None,15,None),
+    '1_0': ('2', None, 15, None),
+    '2_0': ('3', None, 15, None)
+}
+radiobutton = pygui.radio_buttons(40, 40, pygui.hover_toggle_button(
+    10, 80, 5, 5, SIZE[0], SIZE[1], COLOR['RED'], COLOR['GREEN'], False, COLOR['MAROON'], COLOR['GREEN']), 3,2,radiolabels)
 textboxtest = pygui.single_line_text_box(1,20,15,5,SIZE[0],SIZE[1],COLOR['RED'],font_size=20)
-
+seven=pygui.seven_segment(1,40,10,30,SIZE[0],SIZE[1],'0')
 containertest = pygui.movable_container(50,50,50,50,SIZE[0],SIZE[1],5,COLOR['BLUE'],'Container',COLOR['GREY'],top_border_font_size=20)
 containertest.add_object('hover',pygui.hover_toggle_button(1,12,5,5,SIZE[0],SIZE[1],COLOR['RED'], COLOR['GREEN'], False,COLOR['MAROON'],COLOR['CYAN'], 'Hover',font_size=20))
 containertest.add_object('image',pygui.image(20, 20, 20, 20, SIZE[0],SIZE[1], 'satispower.png',5,COLOR['RED']))
 containertest.add_object('one__line',pygui.single_line_text_box(1,50,15,5,SIZE[0],SIZE[1],COLOR['RED']))
+containertest.add_object('radio',radiobutton)
 
-objects = [toggletest, hovertest, momentarytest, imagetest, textboxtest,circletest,containertest]
+objects = [toggletest, hovertest, momentarytest, hovermoment,
+           imagetest, textboxtest, seven, containertest]
 
 def draw_window():
     WINDOW.fill(COLOR['BLACK'])
@@ -70,6 +79,7 @@ def main():
 
     clock = pygame.time.Clock()
     running = True
+    starttime = int(time.time())
     while running:
         clock.tick(TPS)
 
@@ -86,6 +96,12 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 for object in objects:
                     object.onPress(event.key,event.unicode)
+
+        deltaseconds=int(time.time())-starttime
+        if deltaseconds >15:
+            starttime = int(time.time())
+            deltaseconds=int(time.time())-starttime
+        seven.set_value(deltaseconds)
 
         if toggletest.get_value():
             containertest.hide()
