@@ -377,7 +377,7 @@ class TestCompleter(unittest.TestCase):
             self.assertEqual(c, names)
 
             # Now check with a function call
-            cmd = 'a = f("%s' % prefix
+            cmd = f'a = f("{prefix}'
             c = ip.complete(prefix, cmd)[1]
             comp = [prefix + s for s in suffixes]
             self.assertEqual(c, comp)
@@ -396,7 +396,7 @@ class TestCompleter(unittest.TestCase):
             self.assertEqual(c, names)
 
             # Now check with a function call
-            cmd = 'a = f("%s' % prefix
+            cmd = f'a = f("{prefix}'
             c = ip.complete(prefix, cmd)[1]
             comp = {prefix + s for s in suffixes}
             self.assertTrue(comp.issubset(set(c)))
@@ -528,7 +528,7 @@ class TestCompleter(unittest.TestCase):
             )
             ip.Completer.use_jedi = False
 
-        assert len(l) == 1, "Completions (Z.z<tab>) correctly deduplicate: %s " % l
+        assert len(l) == 1, f"Completions (Z.z<tab>) correctly deduplicate: {l} "
         assert l[0].text == "zoo"  # and not `it.accumulate`
 
     def test_greedy_completions(self):
@@ -545,7 +545,7 @@ class TestCompleter(unittest.TestCase):
         ip.ex("a=list(range(5))")
         ip.ex("d = {'a b': str}")
         _, c = ip.complete(".", line="a[0].")
-        self.assertFalse(".real" in c, "Shouldn't have completed on a[0]: %s" % c)
+        self.assertFalse(".real" in c, f"Shouldn't have completed on a[0]: {c}")
 
         def _(line, cursor_pos, expect, message, completion):
             with greedy_completion(), provisionalcompleter():
@@ -1255,23 +1255,6 @@ class TestCompleter(unittest.TestCase):
         self.assertIn("'abc'", matches)
         self.assertIn("b'abd'", matches)
 
-        if False:  # not currently implemented
-            _, matches = complete(line_buffer="d[b")
-            self.assertIn("b'abd'", matches)
-            self.assertNotIn("b'abc'", matches)
-
-            _, matches = complete(line_buffer="d[b'")
-            self.assertIn("abd", matches)
-            self.assertNotIn("abc", matches)
-
-            _, matches = complete(line_buffer="d[B'")
-            self.assertIn("abd", matches)
-            self.assertNotIn("abc", matches)
-
-            _, matches = complete(line_buffer="d['")
-            self.assertIn("abc", matches)
-            self.assertNotIn("abd", matches)
-
     def test_dict_key_completion_unicode_py3(self):
         """Test handling of unicode in dict key completion"""
         ip = get_ipython()
@@ -1322,8 +1305,9 @@ class TestCompleter(unittest.TestCase):
         def completes_on_nested():
             ip.user_ns["d"] = numpy.zeros(2, dtype=dt)
             _, matches = complete(line_buffer="d[1]['my_head']['")
-            self.assertTrue(any(["my_dt" in m for m in matches]))
-            self.assertTrue(any(["my_df" in m for m in matches]))
+            self.assertTrue(any("my_dt" in m for m in matches))
+            self.assertTrue(any("my_df" in m for m in matches))
+
         # complete on a nested level
         with greedy_completion():
             completes_on_nested()

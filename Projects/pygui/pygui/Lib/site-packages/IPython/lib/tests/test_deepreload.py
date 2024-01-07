@@ -30,7 +30,7 @@ def test_deepreload():
             # Test that A is not reloaded.
             obj = A.Object()
             dreload(B, exclude=["A"])
-            assert isinstance(obj, A.Object) is True
+            assert isinstance(obj, A.Object)
 
             # Test that an import failure will not blow-up us.
             A.ok = False
@@ -44,7 +44,7 @@ def test_deepreload():
             A.ok = False
             dreload(B)
             assert A.ok
-            assert isinstance(obj, A.Object) is False
+            assert not isinstance(obj, A.Object)
 
 
 def test_not_module():

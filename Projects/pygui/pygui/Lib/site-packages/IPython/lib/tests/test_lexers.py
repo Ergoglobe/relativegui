@@ -28,7 +28,7 @@ class TestLexers(TestCase):
         ipylex_token = list(self.lexer.get_tokens(fragment))
         assert bash_tokens[:-1] == ipylex_token[:-1]
 
-        fragment_2 = "!" + fragment
+        fragment_2 = f"!{fragment}"
         tokens_2 = [
             (Token.Operator, '!!'),
         ] + bash_tokens[1:]
@@ -42,7 +42,7 @@ class TestLexers(TestCase):
         ] + bash_tokens[1:]
         assert tokens_2 == list(self.lexer.get_tokens(fragment_2))
 
-        fragment_2 = 'x = ' + fragment
+        fragment_2 = f'x = {fragment}'
         tokens_2 = [
             (Token.Name, 'x'),
             (Token.Text, ' '),
@@ -51,7 +51,7 @@ class TestLexers(TestCase):
         ] + bash_tokens
         assert tokens_2[:-1] == list(self.lexer.get_tokens(fragment_2))[:-1]
 
-        fragment_2 = 'x, = ' + fragment
+        fragment_2 = f'x, = {fragment}'
         tokens_2 = [
             (Token.Name, 'x'),
             (Token.Punctuation, ','),
@@ -61,7 +61,7 @@ class TestLexers(TestCase):
         ] + bash_tokens
         assert tokens_2[:-1] == list(self.lexer.get_tokens(fragment_2))[:-1]
 
-        fragment_2 = 'x, = %sx ' + fragment[1:]
+        fragment_2 = f'x, = %sx {fragment[1:]}'
         tokens_2 = [
             (Token.Name, 'x'),
             (Token.Punctuation, ','),

@@ -19,8 +19,9 @@ def get_pasted_lines(sentinel, l_input=py3compat.input, quiet=False):
     """ Yield pasted lines until the user enters the given sentinel value.
     """
     if not quiet:
-        print("Pasting code; enter '%s' alone on the line to stop or use Ctrl-D." \
-              % sentinel)
+        print(
+            f"Pasting code; enter '{sentinel}' alone on the line to stop or use Ctrl-D."
+        )
         prompt = ":"
     else:
         prompt = ""
@@ -47,7 +48,7 @@ class TerminalMagics(Magics):
         if name:
             # If storing it for further editing
             self.shell.user_ns[name] = SList(block.splitlines())
-            print("Block assigned to '%s'" % name)
+            print(f"Block assigned to '{name}'")
         else:
             b = self.preclean_input(block)
             self.shell.user_ns['pasted_block'] = b
@@ -187,8 +188,7 @@ class TerminalMagics(Magics):
         try:
             block = self.shell.hooks.clipboard_get()
         except TryNext as clipboard_exc:
-            message = getattr(clipboard_exc, 'args')
-            if message:
+            if message := getattr(clipboard_exc, 'args'):
                 error(message[0])
             else:
                 error('Could not get text from the clipboard.')

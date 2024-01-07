@@ -192,7 +192,7 @@ class BackgroundJobManager(object):
         self._current_job_id += 1
         self.running.append(job)
         self.all[job.num] = job
-        debug('Starting job # %s in a separate thread.' % job.num)
+        debug(f'Starting job # {job.num} in a separate thread.')
         job.start()
         return job
 
@@ -247,9 +247,9 @@ class BackgroundJobManager(object):
         Return True if the group had any elements."""
 
         if group:
-            print('%s jobs:' % name)
+            print(f'{name} jobs:')
             for job in group:
-                print('%s : %s' % (job.num,job))
+                print(f'{job.num} : {job}')
             print()
             return True
 
@@ -258,10 +258,9 @@ class BackgroundJobManager(object):
 
         Return True if the group had any elements."""
 
-        njobs = len(group)
-        if njobs:
+        if njobs := len(group):
             plural = {1:''}.setdefault(njobs,'s')
-            print('Flushing %s %s job%s.' % (njobs,name,plural))
+            print(f'Flushing {njobs} {name} job{plural}.')
             group[:] = []
             return True
         
@@ -298,11 +297,11 @@ class BackgroundJobManager(object):
         try:
             job = self.all[num]
         except KeyError:
-            error('Job #%s not found' % num)
+            error(f'Job #{num} not found')
         else:
             stat_code = job.stat_code
             if stat_code == self._s_running:
-                error('Job #%s is still running, it can not be removed.' % num)
+                error(f'Job #{num} is still running, it can not be removed.')
                 return
             elif stat_code == self._s_completed:
                 self.completed.remove(job)
@@ -334,14 +333,14 @@ class BackgroundJobManager(object):
         try:
             return self.all[num].result
         except KeyError:
-            error('Job #%s not found' % num)
+            error(f'Job #{num} not found')
 
     def _traceback(self, job):
         num = job if isinstance(job, int) else job.num
         try:
             self.all[num].traceback()
         except KeyError:
-            error('Job #%s not found' % num)
+            error(f'Job #{num} not found')
 
     def traceback(self, job=None):
         if job is None:
@@ -389,16 +388,16 @@ class BackgroundJobBase(threading.Thread):
         """Common initialization for all BackgroundJob objects"""
         
         for attr in ['call','strform']:
-            assert hasattr(self,attr), "Missing attribute <%s>" % attr
-        
+            assert hasattr(self,attr), f"Missing attribute <{attr}>"
+
         # The num tag can be set by an external job manager
         self.num = None
-      
+
         self.status    = BackgroundJobBase.stat_created
         self.stat_code = BackgroundJobBase.stat_created_c
         self.finished  = False
         self.result    = '<BackgroundJob has not completed>'
-        
+
         # reuse the ipython traceback handler if we can get to it, otherwise
         # make a new one
         try:
@@ -413,7 +412,7 @@ class BackgroundJobBase(threading.Thread):
 
         # Hold a formatted traceback if one is generated.
         self._tb = None
-        
+
         threading.Thread.__init__(self)
 
     def __str__(self):

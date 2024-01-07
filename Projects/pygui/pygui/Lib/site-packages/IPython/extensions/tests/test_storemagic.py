@@ -17,7 +17,7 @@ def test_store_restore():
     ip.user_ns['foobar'] = 79
     ip.user_ns['foobaz'] = '80'
     tmpd = tempfile.mkdtemp()
-    ip.magic('cd ' + tmpd)
+    ip.magic(f'cd {tmpd}')
     ip.magic('store foo')
     ip.magic('store bar')
     ip.magic('store foobar foobaz')

@@ -1,10 +1,11 @@
 """Tests for the key interactiveshell module, where the main ipython class is defined.
 """
 
+
 import stack_data
 import sys
 
-SV_VERSION = tuple([int(x) for x in stack_data.__version__.split(".")[0:2]])
+SV_VERSION = tuple(int(x) for x in stack_data.__version__.split(".")[:2])
 
 
 def test_reset():

@@ -243,10 +243,7 @@ class Demo(object):
         if hasattr(src, "read"):
              # It seems to be a file or a file-like object
             self.fname = "from a file-like object"
-            if title == '':
-                self.title = "from a file-like object"
-            else:
-                self.title = title
+            self.title = "from a file-like object" if title == '' else title
         else:
              # Assume it's a string or something that can be converted to one
             self.fname = src
@@ -291,12 +288,7 @@ class Demo(object):
         # read data and parse into blocks
         if hasattr(self, 'fobj') and self.fobj is not None:
            self.fobj.close()
-        if hasattr(self.src, "read"):
-             # It seems to be a file or a file-like object
-            self.fobj = self.src
-        else:
-             # Assume it's a string or something that can be converted to one
-            self.fobj = openpy.open(self.fname)
+        self.fobj = self.src if hasattr(self.src, "read") else openpy.open(self.fname)
 
     def reload(self):
         """Reload source from disk and initialize state."""
@@ -342,7 +334,7 @@ class Demo(object):
 
     def _validate_index(self,index):
         if index<0 or index>=self.nblocks:
-            raise ValueError('invalid block index %s' % index)
+            raise ValueError(f'invalid block index {index}')
 
     def _get_index(self,index):
         """Get the current block index, validating and checking status.
@@ -421,8 +413,11 @@ class Demo(object):
         if index is None:
             return
 
-        print(self.marquee('<%s> block # %s (%s remaining)' %
-                           (self.title,index,self.nblocks-index-1)))
+        print(
+            self.marquee(
+                f'<{self.title}> block # {index} ({self.nblocks - index - 1} remaining)'
+            )
+        )
         print(self.src_blocks_colored[index])
         sys.stdout.flush()
 
@@ -436,11 +431,13 @@ class Demo(object):
         marquee = self.marquee
         for index,block in enumerate(self.src_blocks_colored):
             if silent[index]:
-                print(marquee('<%s> SILENT block # %s (%s remaining)' %
-                              (title,index,nblocks-index-1)))
+                print(
+                    marquee(
+                        f'<{title}> SILENT block # {index} ({nblocks - index - 1} remaining)'
+                    )
+                )
             else:
-                print(marquee('<%s> block # %s (%s remaining)' %
-                              (title,index,nblocks-index-1)))
+                print(marquee(f'<{title}> block # {index} ({nblocks - index - 1} remaining)'))
             print(block, end=' ')
         sys.stdout.flush()
 
@@ -466,8 +463,11 @@ class Demo(object):
             next_block = self.src_blocks[index]
             self.block_index += 1
             if self._silent[index]:
-                print(marquee('Executing silent block # %s (%s remaining)' %
-                              (index,self.nblocks-index-1)))
+                print(
+                    marquee(
+                        f'Executing silent block # {index} ({self.nblocks - index - 1} remaining)'
+                    )
+                )
             else:
                 self.pre_cmd()
                 self.show(index)
@@ -475,8 +475,7 @@ class Demo(object):
                     print(marquee('output:'))
                 else:
                     print(marquee('Press <q> to quit, <Enter> to execute...'), end=' ')
-                    ans = py3compat.input().strip()
-                    if ans:
+                    if ans := py3compat.input().strip():
                         print(marquee('Block NOT executed'))
                         return
             try:
@@ -495,8 +494,7 @@ class Demo(object):
                 self.ip_ns.update(self.user_ns)
 
         if self.block_index == self.nblocks:
-            mq1 = self.marquee('END OF DEMO')
-            if mq1:
+            if mq1 := self.marquee('END OF DEMO'):
                 # avoid spurious print if empty marquees are used
                 print()
                 print(mq1)
@@ -634,10 +632,7 @@ class ClearIPDemo(ClearMixin,IPythonDemo):
 
 def slide(file_path, noclear=False, format_rst=True, formatter="terminal",
           style="native", auto_all=False, delimiter='...'):
-    if noclear:
-        demo_class = Demo
-    else:
-        demo_class = ClearDemo
+    demo_class = Demo if noclear else ClearDemo
     demo = demo_class(file_path, format_rst=format_rst, formatter=formatter,
                       style=style, auto_all=auto_all)
     while not demo.finished:

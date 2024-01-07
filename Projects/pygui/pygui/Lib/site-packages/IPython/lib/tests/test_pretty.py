@@ -105,19 +105,7 @@ def test_callability_checking():
     assert gotoutput == expectedoutput
 
 
-@pytest.mark.parametrize(
-    "obj,expected_output",
-    zip(
-        [
-            set(),
-            frozenset(),
-            set([1]),
-            frozenset([1]),
-            set([1, 2]),
-            frozenset([1, 2]),
-            set([-1, -2, -3]),
-        ],
-        [
+@pytest.mark.parametrize("obj,expected_output", zip([set(), frozenset(), {1}, frozenset([1]), {1, 2}, frozenset([1, 2]), {-1, -2, -3}], [
             "set()",
             "frozenset()",
             "{1}",
@@ -125,9 +113,7 @@ def test_callability_checking():
             "{1, 2}",
             "frozenset({1, 2})",
             "{-3, -2, -1}",
-        ],
-    ),
-)
+        ]))
 def test_sets(obj, expected_output):
     """
     Test that set and frozenset use Python 3 formatting.
@@ -253,7 +239,7 @@ class MetaClass(type):
         return type.__new__(cls, name, (object,), {'name': name})
 
     def __repr__(self):
-        return "[CUSTOM REPR FOR CLASS %s]" % self.name
+        return f"[CUSTOM REPR FOR CLASS {self.name}]"
 
 
 ClassWithMeta = MetaClass('ClassWithMeta')
@@ -274,9 +260,9 @@ def test_unicode_repr():
 
     c = C()
     p = pretty.pretty(c)
-    assert p == u
+    assert p == ustr
     p = pretty.pretty([c])
-    assert p == "[%s]" % u
+    assert p == f"[{ustr}]"
 
 
 def test_basic_class():
@@ -284,6 +270,7 @@ def test_basic_class():
         if obj is MyObj:
             type_pprint_wrapper.called = True
         return pretty._type_pprint(obj, p, cycle)
+
     type_pprint_wrapper.called = False
 
     stream = StringIO()
@@ -293,8 +280,8 @@ def test_basic_class():
     printer.flush()
     output = stream.getvalue()
 
-    assert output == "%s.MyObj" % __name__
-    assert type_pprint_wrapper.called is True
+    assert output == f"{__name__}.MyObj"
+    assert type_pprint_wrapper.called
 
 
 def test_collections_userlist():
@@ -305,7 +292,7 @@ def test_collections_userlist():
     cases = [
         (UserList(), "UserList([])"),
         (
-            UserList(i for i in range(1000, 1020)),
+            UserList(iter(range(1000, 1020))),
             "UserList([1000,\n"
             "          1001,\n"
             "          1002,\n"
@@ -387,27 +374,29 @@ def test_collections_deque():
 
     cases = [
         (deque(), 'deque([])'),
-        (deque(i for i in range(1000, 1020)),
-         'deque([1000,\n'
-         '       1001,\n'
-         '       1002,\n'
-         '       1003,\n'
-         '       1004,\n'
-         '       1005,\n'
-         '       1006,\n'
-         '       1007,\n'
-         '       1008,\n'
-         '       1009,\n'
-         '       1010,\n'
-         '       1011,\n'
-         '       1012,\n'
-         '       1013,\n'
-         '       1014,\n'
-         '       1015,\n'
-         '       1016,\n'
-         '       1017,\n'
-         '       1018,\n'
-         '       1019])'),
+        (
+            deque(iter(range(1000, 1020))),
+            'deque([1000,\n'
+            '       1001,\n'
+            '       1002,\n'
+            '       1003,\n'
+            '       1004,\n'
+            '       1005,\n'
+            '       1006,\n'
+            '       1007,\n'
+            '       1008,\n'
+            '       1009,\n'
+            '       1010,\n'
+            '       1011,\n'
+            '       1012,\n'
+            '       1013,\n'
+            '       1014,\n'
+            '       1015,\n'
+            '       1016,\n'
+            '       1017,\n'
+            '       1018,\n'
+            '       1019])',
+        ),
         (a, 'deque([deque(...)])'),
     ]
     for obj, expected in cases:
@@ -499,7 +488,7 @@ def test_pretty_environ():
     # reindent to align with 'environ' prefix
     dict_indented = dict_repr.replace('\n', '\n' + (' ' * len('environ')))
     env_repr = pretty.pretty(os.environ)
-    assert env_repr == "environ" + dict_indented
+    assert env_repr == f"environ{dict_indented}"
 
 
 def test_function_pretty():
@@ -512,9 +501,7 @@ def test_function_pretty():
 
     # custom function
     def meaning_of_life(question=None):
-        if question:
-            return 42
-        return "Don't panic"
+        return 42 if question else "Don't panic"
 
     assert "meaning_of_life(question=None)" in pretty.pretty(meaning_of_life)
 

@@ -94,7 +94,7 @@ def get_parent(globals, level):
             globals['__package__'] = name = modname[:lastdot]
 
     dot = len(name)
-    for x in range(level, 1, -1):
+    for _ in range(level, 1, -1):
         try:
             dot = name.rindex('.', 0, dot)
         except ValueError as e:
@@ -105,14 +105,13 @@ def get_parent(globals, level):
     try:
         parent = sys.modules[name]
     except BaseException as e:
-        if orig_level < 1:
-            warn("Parent module '%.200s' not found while handling absolute "
-                 "import" % name)
-            parent = None
-        else:
+        if orig_level >= 1:
             raise SystemError("Parent module '%.200s' not loaded, cannot "
                               "perform relative import" % name) from e
 
+        warn("Parent module '%.200s' not found while handling absolute "
+             "import" % name)
+        parent = None
     # We expect, but can't guarantee, if parent != None, that:
     # - parent.__name__ == name
     # - parent.__dict__ is globals
@@ -221,7 +220,7 @@ def ensure_fromlist(mod, fromlist, buf, recursive):
                 if not ret:
                     return 0
         elif not hasattr(mod, item):
-            import_submodule(mod, item, buf + '.' + item)
+            import_submodule(mod, item, f'{buf}.{item}')
 
 def deep_import_hook(name, globals=None, locals=None, fromlist=None, level=-1):
     """Replacement for __import__()"""

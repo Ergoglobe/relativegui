@@ -114,10 +114,7 @@ class LineInfo(object):
         self.pre, self.esc, self.ifun, self.the_rest = split_user_input(line)
 
         self.pre_char       = self.pre.strip()
-        if self.pre_char:
-            self.pre_whitespace = '' # No whitespace allowed before esc chars
-        else:
-            self.pre_whitespace = self.pre
+        self.pre_whitespace = '' if self.pre_char else self.pre
 
     def ofind(self, ip) -> OInfo:
         """Do a full, attribute-walking lookup of the ifun in the various
@@ -135,4 +132,4 @@ class LineInfo(object):
         return ip._ofind(self.ifun)
 
     def __str__(self):
-        return "LineInfo [%s|%s|%s|%s]" %(self.pre, self.esc, self.ifun, self.the_rest)
+        return f"LineInfo [{self.pre}|{self.esc}|{self.ifun}|{self.the_rest}]"

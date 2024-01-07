@@ -22,7 +22,7 @@ class Prompts(object):
                 mode = mode[10:13].lower()
             elif mode.startswith('vi-'):
                 mode = mode[3:6]
-            return '['+mode+'] '
+            return f'[{mode}] '
         return ''
 
 

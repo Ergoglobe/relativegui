@@ -382,10 +382,8 @@ def _decorator_skip_setup():
     child.str_last_chars = 500
 
     dedented_blocks = [dedent(b).strip() for b in skip_decorators_blocks]
-    in_prompt_number = 1
-    for cblock in dedented_blocks:
+    for in_prompt_number, cblock in enumerate(dedented_blocks, start=1):
         child.expect_exact(f"In [{in_prompt_number}]:")
-        in_prompt_number += 1
         for line in cblock.splitlines():
             child.sendline(line)
             child.expect_exact(line)
@@ -481,10 +479,8 @@ def test_decorator_skip_with_breakpoint():
             "f()",
         ]
 
-        in_prompt_number = 1
-        for cblock in dedented_blocks:
+        for in_prompt_number, cblock in enumerate(dedented_blocks, start=1):
             child.expect_exact(f"In [{in_prompt_number}]:")
-            in_prompt_number += 1
             for line in cblock.splitlines():
                 child.sendline(line)
                 child.expect_exact(line)

@@ -59,7 +59,7 @@ def test_existing_path_FileLink():
     tf = NamedTemporaryFile()
     fl = display.FileLink(tf.name)
     actual = fl._repr_html_()
-    expected = "<a href='%s' target='_blank'>%s</a><br>" % (tf.name, tf.name)
+    expected = f"<a href='{tf.name}' target='_blank'>{tf.name}</a><br>"
     assert actual == expected
 
 
@@ -106,11 +106,13 @@ def test_existing_path_FileLinks():
     actual.sort()
     # the links should always have forward slashes, even on windows, so replace
     # backslashes with forward slashes here
-    expected = ["%s/<br>" % td,
-                "&nbsp;&nbsp;<a href='%s' target='_blank'>%s</a><br>" %\
-                 (tf2.name.replace("\\","/"),split(tf2.name)[1]),
-                "&nbsp;&nbsp;<a href='%s' target='_blank'>%s</a><br>" %\
-                 (tf1.name.replace("\\","/"),split(tf1.name)[1])]
+    expected = [
+        f"{td}/<br>",
+        "&nbsp;&nbsp;<a href='%s' target='_blank'>%s</a><br>"
+        % (tf2.name.replace("\\", "/"), split(tf2.name)[1]),
+        "&nbsp;&nbsp;<a href='%s' target='_blank'>%s</a><br>"
+        % (tf1.name.replace("\\", "/"), split(tf1.name)[1]),
+    ]
     expected.sort()
     # We compare the sorted list of links here as that's more reliable
     assert actual == expected
@@ -143,7 +145,7 @@ def test_existing_path_FileLinks_repr():
     actual = repr(fl)
     actual = actual.split('\n')
     actual.sort()
-    expected = ['%s/' % td, '  %s' % split(tf1.name)[1],'  %s' % split(tf2.name)[1]]
+    expected = [f'{td}/', f'  {split(tf1.name)[1]}', f'  {split(tf2.name)[1]}']
     expected.sort()
     # We compare the sorted list of links here as that's more reliable
     assert actual == expected
@@ -265,7 +267,7 @@ def read_wav(data):
     with wave.open(BytesIO(data)) as wave_file:
         wave_data = wave_file.readframes(wave_file.getnframes())
         num_samples = wave_file.getnframes() * wave_file.getnchannels()
-        return struct.unpack('<%sh' % num_samples, wave_data)
+        return struct.unpack(f'<{num_samples}h', wave_data)
 
 def test_code_from_file():
     c = display.Code(filename=__file__)

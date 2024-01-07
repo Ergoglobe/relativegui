@@ -146,7 +146,7 @@ class static_object:
             )
             surface.blit(self.image, self.image_rect)
 
-        if self.raw_text != None and self.raw_text != "":
+        if self.raw_text not in [None, ""]:
             self.font_size = round(self.raw_font_size * screen_y / 1080)
             self.FONT = pygame.font.Font(self.font, self.font_size)
             self.text = self.FONT.render(self.raw_text, True, self.font_color)
@@ -190,10 +190,10 @@ class static_object:
                 ),
             )
 
-            for values in self.border_boxes:
-                self.borders.append(
-                    pygame.Rect(values[0], values[1], values[2], values[3])
-                )
+            self.borders.extend(
+                pygame.Rect(values[0], values[1], values[2], values[3])
+                for values in self.border_boxes
+            )
             for border in self.borders:
                 pygame.draw.rect(surface, self.border_color, border)
 
@@ -309,16 +309,12 @@ class variable_object(static_object):
 class click_object(variable_object):
     def rawClick(self):
         pos = pygame.mouse.get_pos()
-        if (
+        return (
             pos[0] > self.x[0]
             and pos[0] < self.x[0] + self.w[0]
             and pos[1] > self.y[0]
             and pos[1] < self.y[0] + self.h[0]
-        ):
-            data = True
-        else:
-            data = False
-        return data
+        )
 
     def onClick(self):
         if self.minimized or not self.processing:
@@ -392,10 +388,7 @@ class base_toggle_button(click_object):
         if data[0]:
             self.value = not self.value
 
-        if self.value:
-            self.color = self.toggle_color
-        else:
-            self.color = self.base_color
+        self.color = self.toggle_color if self.value else self.base_color
         return data
 
 
@@ -460,16 +453,9 @@ class hover_toggle_button(base_toggle_button):
         )
 
         if self.value:
-            if data:
-                self.color = self.true_hover_color
-            else:
-                self.color = self.toggle_color
+            self.color = self.true_hover_color if data else self.toggle_color
         else:
-            if data:
-                self.color = self.false_hover_color
-            else:
-                self.color = self.base_color
-
+            self.color = self.false_hover_color if data else self.base_color
         return data
 
 
@@ -546,10 +532,11 @@ class momentary_button(base_toggle_button):
         if data[0]:
             self.value = True
             self.color = self.toggle_color
-            if self.function != None and self.args == None:
-                return data, self.function()
-            elif self.function != None:
-                return data, self.function(self.args)
+            if self.function != None:
+                if self.args is None:
+                    return data, self.function()
+                else:
+                    return data, self.function(self.args)
         return data
 
 
@@ -616,11 +603,7 @@ class hover_momentary_button(momentary_button):
         if self.value:
             self.color = self.toggle_color
         else:
-            if data:
-                self.color = self.false_hover_color
-            else:
-                self.color = self.base_color
-
+            self.color = self.false_hover_color if data else self.base_color
         return data
 
 
@@ -859,8 +842,9 @@ class single_line_text_box(click_object):
                 not self.int_only or unicode in integers or unicode in self.lst
             ) and unicode not in self.banned:
                 self.change_text(self.raw_text + unicode)
-            if self.text.get_width() > self.rect.w or (
-                len(self.raw_text) > self.char_cap and self.char_cap > -1
+            if (
+                self.text.get_width() > self.rect.w
+                or len(self.raw_text) > self.char_cap > -1
             ):
                 self.change_text(self.raw_text[:-1])
                 return False, self.raw_text, key, unicode
@@ -1140,10 +1124,10 @@ class seven_segment(variable_object):
         six = (self.x[0] + 5, self.y[0] + self.h[0] // 2 - 2, self.w[0] - 10, 5)
         self.segment_boxes = (zero, one, two, three, four, five, six)
 
-        for values in self.segment_boxes:
-            self.segments.append(
-                pygame.Rect(values[0], values[1], values[2], values[3])
-            )
+        self.segments.extend(
+            pygame.Rect(values[0], values[1], values[2], values[3])
+            for values in self.segment_boxes
+        )
         for segment in self.segments:
             if allowed_segments[self.value][self.segments.index(segment)] == "1":
                 pygame.draw.rect(surface, self.segment_color_true, segment)
@@ -1168,10 +1152,7 @@ class seven_segment(variable_object):
     def set_value(self, value):
         if type(value) is not str:
             value = str(value)
-        if "." in value:
-            self.period = True
-        else:
-            self.period = False
+        self.period = "." in value
         if value not in allowed_segments:
             raise Exception(f"{value} not compatible")
         self.value = value

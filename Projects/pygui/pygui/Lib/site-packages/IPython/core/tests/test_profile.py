@@ -146,7 +146,7 @@ def test_profile_create_ipython_dir():
                 "profile",
                 "create",
                 "foo",
-                "--ipython-dir=%s" % td,
+                f"--ipython-dir={td}",
             ]
         )
         profile_dir = Path(td) / "profile_foo"

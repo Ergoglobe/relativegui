@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Release data for the IPython project."""
 
+
 #-----------------------------------------------------------------------------
 #  Copyright (c) 2008, IPython Development Team.
 #  Copyright (c) 2001, Fernando Perez <fernando.perez@colorado.edu>
@@ -27,7 +28,7 @@ _ver = [_version_major, _version_minor, _version_patch]
 
 __version__ = '.'.join(map(str, _ver))
 if _version_extra:
-    __version__ = __version__  + _version_extra
+    __version__ += _version_extra
 
 version = __version__  # backwards compatibility name
 version_info = (_version_major, _version_minor, _version_patch, _version_extra)

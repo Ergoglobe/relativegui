@@ -91,15 +91,12 @@ def latex_to_png(s, encode=False, backend=None, wrap=False, color='Black',
     elif backend == 'dvipng':
         f = latex_to_png_dvipng
         if color.startswith('#'):
-            # Convert hex RGB color to LaTeX RGB color.
-            if len(color) == 7:
-                try:
-                    color = "RGB {}".format(" ".join([str(int(x, 16)) for x in
-                                                      textwrap.wrap(color[1:], 2)]))
-                except ValueError as e:
-                    raise ValueError('Invalid color specification {}.'.format(color)) from e
-            else:
-                raise ValueError('Invalid color specification {}.'.format(color))
+            if len(color) != 7:
+                raise ValueError(f'Invalid color specification {color}.')
+            try:
+                color = f'RGB {" ".join([str(int(x, 16)) for x in textwrap.wrap(color[1:], 2)])}'
+            except ValueError as e:
+                raise ValueError(f'Invalid color specification {color}.') from e
     else:
         raise ValueError('No such backend {0}'.format(backend))
     bin_data = f(s, wrap, color, scale)
@@ -250,8 +247,7 @@ def latex_to_html(s, alt='image'):
     alt : str
         The alt text to use for the HTML.
     """
-    base64_data = latex_to_png(s, encode=True).decode('ascii')
-    if base64_data:
+    if base64_data := latex_to_png(s, encode=True).decode('ascii'):
         return _data_uri_template_png  % (base64_data, alt)
 
 

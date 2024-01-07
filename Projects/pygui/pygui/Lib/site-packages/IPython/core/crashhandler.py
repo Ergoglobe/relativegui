@@ -131,7 +131,7 @@ class CrashHandler(object):
         source for further details.
 
         """
-        self.crash_report_fname = "Crash_report_%s.txt" % app.name
+        self.crash_report_fname = f"Crash_report_{app.name}.txt"
         self.app = app
         self.call_pdb = call_pdb
         #self.call_pdb = True # dbg
@@ -224,13 +224,8 @@ class CrashHandler(object):
 def crash_handler_lite(etype, evalue, tb):
     """a light excepthook, adding a small message to the usual traceback"""
     traceback.print_exception(etype, evalue, tb)
-    
+
     from IPython.core.interactiveshell import InteractiveShell
-    if InteractiveShell.initialized():
-        # we are in a Shell environment, give %magic example
-        config = "%config "
-    else:
-        # we are not in a shell, show generic config
-        config = "c."
+    config = "%config " if InteractiveShell.initialized() else "c."
     print(_lite_message_template.format(email=author_email, config=config, version=version), file=sys.stderr)
 

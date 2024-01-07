@@ -1,11 +1,11 @@
 with open('pygui.py','r') as file:
     raw = file.readlines()
 
-classes = []
-for line in raw:
-    if line.startswith('class'):
-        classes.append(line.replace(':\n','').replace('class ',''))
-
+classes = [
+    line.replace(':\n', '').replace('class ', '')
+    for line in raw
+    if line.startswith('class')
+]
 sortedclasses = {
     '_master_':[]
 }
@@ -35,7 +35,7 @@ for master in sortedclasses['_master_']:
     if is_objects(master):
         branch = []
         searched = []
-        
+
         for object in sortedclasses[master]:
             if is_objects(object):
                 branch.append(object)
@@ -63,7 +63,7 @@ for master in sortedclasses['_master_']:
                     searched.append(object)
 
             else:
-                tree += '|'+object+'\n'
+                tree += f'|{object}' + '\n'
                 searched.append(object)
 
 with open('classtree.txt','w') as file:

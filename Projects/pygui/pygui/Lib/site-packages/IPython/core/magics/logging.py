@@ -127,7 +127,7 @@ class LoggingMagics(Magics):
                             log_raw_input)
         except:
             self.shell.logfile = old_logfile
-            warn("Couldn't start log: %s" % sys.exc_info()[1])
+            warn(f"Couldn't start log: {sys.exc_info()[1]}")
         else:
             # log input history up to this point, optionally interleaving
             # output if requested
