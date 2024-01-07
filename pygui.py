@@ -1,33 +1,32 @@
-import pygame
-import copy
+import pygame,copy
 
 COLOR = {
-    'BLACK': (0, 0, 0),
-    'WHITE': (255, 255, 255),
-    'GREY': (127, 127, 127),
-    'RED': (255, 0, 0),
-    'GREEN': (0, 255, 0),
-    'BLUE': (0, 0, 255),
-    'YELLOW': (255, 255, 0),
-    'CYAN': (0, 255, 255),
-    'MAGENTA': (255, 0, 255),
-    'DARKGREY': (80, 80, 80),
-    'PINK': (255, 192, 203),
-    'LIGHTPINK': (255, 182, 193),
-    'HOTPINK': (255, 105, 180),
-    'DEEPPINK': (255, 20, 147),
-    'ORANGE': (255, 165, 0),
-    'DARKORANGE': (255, 140, 0),
-    'ORANGERED': (255, 69, 0),
-    'GOLD': (255, 215, 0),
-    'INDIGO': (75, 0, 130),
-    'LIMEGREEN': (50, 205, 50),
-    'MAROON': (128, 0, 0),
-    'BABYBLUE': (137, 207, 240),
-    'SILVER': (192, 192, 192),
-    'PEACH': (255, 218, 185),
-    'CORAL': (255, 127, 80),
-    'CRIMSON': (157, 34, 53),
+    'BLACK':(0,0,0),
+    'WHITE':(255,255,255),
+    'GREY':(127,127,127),
+    'RED':(255,0,0),
+    'GREEN':(0,255,0),
+    'BLUE':(0,0,255),
+    'YELLOW':(255,255,0),
+    'CYAN':(0,255,255),
+    'MAGENTA':(255,0,255),
+    'DARKGREY':(80,80,80),
+    'PINK':(255,192,203),
+    'LIGHTPINK':(255,182,193),
+    'HOTPINK':(255,105,180),
+    'DEEPPINK':(255,20,147),
+    'ORANGE':(255,165,0),
+    'DARKORANGE':(255,140,0),
+    'ORANGERED':(255,69,0),
+    'GOLD':(255,215,0),
+    'INDIGO':(75,0,130),
+    'LIMEGREEN':(50,205,50),
+    'MAROON':(128,0,0),
+    'BABYBLUE':(137,207,240),
+    'SILVER':(192,192,192),
+    'PEACH':(255,218,185),
+    'CORAL':(255, 127, 80),
+    'CRIMSON':(157,34,53),
 
 }
 
@@ -77,6 +76,7 @@ class static_object():
         self.processing = True
         self.center = 'center'
 
+        self.raw_font_size = font_size
         self.font_size = round(font_size*screen_y/1080)
         self.FONT = pygame.font.Font(font, self.font_size)
         self.raw_text = text
@@ -122,6 +122,9 @@ class static_object():
             surface.blit(self.image, self.image_rect)
 
         if self.raw_text != None and self.raw_text != '':
+            self.font_size = round(self.raw_font_size*screen_y/1080)
+            self.FONT = pygame.font.Font(self.font, self.font_size)
+            self.text = self.FONT.render(self.raw_text, True, self.font_color)
             if self.center == 'center':
                 self.textrect = self.text.get_rect()
                 self.textrect.center = (
@@ -133,8 +136,7 @@ class static_object():
 
             elif self.center == 'right':
                 self.textrect = self.text.get_rect()
-                self.textrect.midright = (
-                    self.x[0]+self.w[0], self.y[0]+self.h[0]//2)
+                self.textrect.midright = (self.x[0]+self.w[0], self.y[0]+self.h[0]//2)
 
             surface.blit(self.text, self.textrect)
 
@@ -153,6 +155,7 @@ class static_object():
     def change_text(self, text=None, font=None, font_size=None, font_color=None):
         if font != None or font_size != None:
             if font_size != None:
+                self.raw_font_size = font_size
                 self.font_size = round(font_size*self.screen_y/1080)
             if font != None:
                 self.font = font
@@ -183,11 +186,14 @@ class static_object():
         # scale=pixel*100/screen
 
     def set_relative_pos(self, x, y, screen_x, screen_y, scale_x=1, scale_y=1, offset_x=0, offset_y=0):
-        self.x = (round(screen_x*x[1]/100*scale_x+offset_x), x[1])
-        self.y = (round(screen_y*y[1]/100*scale_y+offset_y), y[1])
+        self.x = (round(screen_x*x/100*scale_x+offset_x), x)
+        self.y = (round(screen_y*y/100*scale_y+offset_y), y)
 
     def get_pos(self):
         return (self.x[0], self.y[0])
+    
+    def get_relative_pos(self,screen_x,screen_y):
+        return (self.x[0]*100/screen_x,self.y[0]*100/screen_y)
 
     def noClick(self):
         return (False, pygame.mouse.get_pressed())
@@ -229,19 +235,17 @@ class click_object(variable_object):
         else:
             data = False
         return data
-
+    
     def onClick(self):
         if self.minimized or not self.processing:
             return self.noClick()
-        return (self.rawClick(), pygame.mouse.get_pressed())
-
+        return(self.rawClick(), pygame.mouse.get_pressed())
+    
     def process(self, surface, screen_x, screen_y, scale_x=1, scale_y=1, offset_x=0, offset_y=0):
         if self.minimized:
             return
-        super().process(surface, screen_x, screen_y, scale_x=scale_x,
-                        scale_y=scale_y, offset_x=offset_x, offset_y=offset_y)
+        super().process(surface, screen_x, screen_y, scale_x=scale_x,scale_y=scale_y, offset_x=offset_x, offset_y=offset_y)
         return self.rawClick()
-
 
 class base_toggle_button(click_object):
     def __init__(self, x, y, w, h, screen_x, screen_y, color, toggle_color, value, text='', font='freesansbold.ttf', font_size=10, font_color=(0, 0, 0), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
@@ -293,10 +297,11 @@ class hover_toggle_button(base_toggle_button):
 
 
 class momentary_button(base_toggle_button):
-    def __init__(self, x, y, w, h, screen_x, screen_y, color, toggle_color, function=None, text='', font='freesansbold.ttf', font_size=10, font_color=(0, 0, 0), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
+    def __init__(self, x, y, w, h, screen_x, screen_y, color, toggle_color, function=None, text='', args = None, font='freesansbold.ttf', font_size=10, font_color=(0, 0, 0), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
         super().__init__(x, y, w, h, screen_x, screen_y, color, toggle_color, False, text, font,
                          font_size, font_color, scale_x=scale_x, scale_y=scale_y, offset_x=offset_x, offset_y=offset_y)
         self.function = function
+        self.args = args
 
     def process(self, surface, screen_x, screen_y, scale_x=1, scale_y=1, offset_x=0, offset_y=0):
         if self.minimized:
@@ -310,7 +315,7 @@ class momentary_button(base_toggle_button):
 
         return data
 
-    def onClick(self, args=None):
+    def onClick(self):
         if self.minimized or not self.processing:
             return self.noClick()
         data = super().onClick()
@@ -318,16 +323,16 @@ class momentary_button(base_toggle_button):
         if data[0]:
             self.value = True
             self.color = self.toggle_color
-            if self.function != None and args == None:
+            if self.function != None and self.args == None:
                 return data, self.function()
             elif self.function != None:
-                return data, self.function(args)
+                return data, self.function(self.args)
         return data
 
 
 class hover_momentary_button(momentary_button):
-    def __init__(self, x, y, w, h, screen_x, screen_y, color, toggle_color, function, false_hover_color, text='', font='freesansbold.ttf', font_size=10, font_color=(0, 0, 0), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
-        super().__init__(x, y, w, h, screen_x, screen_y, color, toggle_color, function, text, font,
+    def __init__(self, x, y, w, h, screen_x, screen_y, color, toggle_color, function, false_hover_color, text='',args=None, font='freesansbold.ttf', font_size=10, font_color=(0, 0, 0), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
+        super().__init__(x, y, w, h, screen_x, screen_y, color, toggle_color, function, text,args, font,
                          font_size, font_color, scale_x=scale_x, scale_y=scale_y, offset_x=offset_x, offset_y=offset_y)
         self.false_hover_color = false_hover_color
 
@@ -379,17 +384,40 @@ class circle(rectangle):
         super().process(surface, screen_x, screen_y, scale_x, scale_y, offset_x, offset_y)
         self.color = temp
 
+integers = ('0','1','2','3','4','5','6','7','8','9')
 
 class single_line_text_box(click_object):
-    def __init__(self, x, y, w, h, screen_x, screen_y, color, text='', font_size=10, font='freesansbold.ttf', font_color=(255, 255, 255), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
+    def __init__(self, x, y, w, h, screen_x, screen_y, color, text='', font_size=10, font='freesansbold.ttf', font_color=(255, 255, 255),int_only = False,lst_only = (),char_cap=-1,banned_characters=(),function=None,args=None,functionstyle=0, scale_x=1, scale_y=1, offset_x=0, offset_y=0):
         super().__init__(x, y, w, h, screen_x, screen_y, color, text, font,
                          font_size, font_color, False, scale_x, scale_y, offset_x, offset_y)
         self.center = 'left'
+        self.int_only = int_only
+        self.lst = lst_only
+        self.char_cap = char_cap
+        self.banned = banned_characters
+        self.function = function
+        self.args = args
+        self.function_style = functionstyle
+        self.styles = {
+            0:('',),
+            1:('Click',),
+            2:('Press',),
+            3:('Click','Press')
+        }
+
+    def activate_function(self,action):
+        if self.function is not None and action in self.styles[self.function_style]:
+            if self.args is None:
+                self.function()
+            else:
+                self.function(self.args)
 
     def onClick(self):
         if self.minimized or not self.processing:
             return self.noClick()
         self.value = super().onClick()[0]
+        if self.value:
+            self.activate_function('Click')
         return (self.value, pygame.mouse.get_pressed())
 
     def onPress(self, key, unicode):
@@ -405,13 +433,15 @@ class single_line_text_box(click_object):
         elif enter:
             self.value = False
         else:
-            self.change_text(self.raw_text+unicode)
-            if self.text.get_width() > self.rect.w:
+            if (not self.int_only or unicode in integers or unicode in self.lst)and unicode not in self.banned:
+                self.change_text(self.raw_text+unicode)
+            if self.text.get_width() > self.rect.w or (len(self.raw_text) > self.char_cap and self.char_cap > -1):
                 self.change_text(self.raw_text[:-1])
                 return False, self.raw_text, key, unicode
 
+        self.activate_function('Press')
         return True, self.raw_text
-
+    
     def get_raw(self):
         return self.raw_text
 
@@ -421,6 +451,7 @@ class Container(rectangle):
         super().__init__(x, y, w, h, screen_x, screen_y, color, border_px=border_px,
                          border_color=border_color, scale_x=scale_x, scale_y=scale_y, offset_x=offset_x, offset_y=offset_y)
         self.objects = {}
+        self.internal_buffer = {} #For saving user defined data
 
     def process(self, surface, screen_x, screen_y, scale_x=1, scale_y=1, offset_x=0, offset_y=0):
         if self.minimized:
@@ -508,9 +539,8 @@ class display():
     def onPress(self, key, unicode):
         self.containers[self.screen].onPress(key, unicode)
 
-    def select_screen(self, screen):
-        self.screen = screen
-
+    def select_screen(self,screen):
+        self.screen=screen
 
 class seven_segment(variable_object):
     def __init__(self, x, y, w, h, screen_x, screen_y, number='0', color=(127, 127, 127), segment_color_true=(255, 0, 0), segment_color_false=(0, 0, 0), scale_x=1, scale_y=1, offset_x=0, offset_y=0):
@@ -567,11 +597,13 @@ class seven_segment(variable_object):
 
 
 class radio():
-    def __init__(self) -> None:
+    def __init__(self, function=None, args=None) -> None:
         self.objects = {}
         self.minimized = False
         self.processing = True
         self.selected = None
+        self.function = function
+        self.args = args
 
     def process(self, surface, screen_x, screen_y, scale_x=1, scale_y=1, offset_x=0, offset_y=0):
         if self.minimized:
@@ -590,6 +622,11 @@ class radio():
                 break
         for object in self.objects:
             self.objects[object][0].value = object == self.selected
+        if self.function is not None:
+            if self.args is None:
+                self.function()
+            else:
+                self.function(self.args)
         return click, pygame.mouse.get_pressed()
 
     def onPress(self, key, unicode):
@@ -615,29 +652,31 @@ class radio():
 
 
 class radio_buttons(radio):
-    def __init__(self, x_offset, y_offset, button_class, x_buttons=1, y_buttons=1, labels={'0_0': ('', None, None, None), }):
-        super().__init__()
+    def __init__(self, x_offset, y_offset,screen_x,screen_y, button_class, x_buttons=1, y_buttons=1, labels={'0_0': ('', None, None, None), },function=None):
+        super().__init__(function)
         store_x = x_offset
         store_y = y_offset
         x_offset = 0
         y_offset = 0
         for y_ in range(y_buttons):
-            x_offset = store_x
             for x_ in range(x_buttons):
-                self.add_object(f'{x_}_{y_}', copy.copy(
-                    button_class), x_offset, y_offset)
+                button = copy.copy(button_class)
+                origpos = button.get_relative_pos(screen_x,screen_y)
+                button.set_relative_pos(x_offset+origpos[0],y_offset+origpos[1], screen_x, screen_y)
+                self.add_object(f'{x_}_{y_}', button)
                 try:
                     self.objects[f'{x_}_{y_}'][0].change_text(
                         labels[f'{x_}_{y_}'][0], labels[f'{x_}_{y_}'][1], labels[f'{x_}_{y_}'][2], labels[f'{x_}_{y_}'][3])
                 except:
                     pass
                 x_offset += store_x
+            x_offset = 0
             y_offset += store_y
 
 
 class linked_textbox(radio):
-    def __init__(self, x_offset, y_offset, textbox_class, x_box=1, y_box=1):
-        super().__init__()
+    def __init__(self, x_offset, y_offset, textbox_class, x_box=1, y_box=1,function=None):
+        super().__init__(function)
         store_x = x_offset
         store_y = y_offset
         x_offset = 0
