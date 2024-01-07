@@ -204,12 +204,10 @@ class IPythonTracebackLexer(DelegatingLexer):
         self.python3 = get_bool_opt(options, 'python3', False)
         if self.python3:
             self.aliases = ['ipython3tb']
+            IPyLexer = IPython3Lexer
         else:
             self.aliases = ['ipython2tb', 'ipythontb']
 
-        if self.python3:
-            IPyLexer = IPython3Lexer
-        else:
             IPyLexer = IPythonLexer
 
         DelegatingLexer.__init__(self, IPyLexer,
@@ -318,13 +316,8 @@ class IPythonConsoleLexer(Lexer):
 
         Lexer.__init__(self, **options)
 
-        if self.python3:
-            pylexer = IPython3Lexer
-            tblexer = IPythonTracebackLexer
-        else:
-            pylexer = IPythonLexer
-            tblexer = IPythonTracebackLexer
-
+        pylexer = IPython3Lexer if self.python3 else IPythonLexer
+        tblexer = IPythonTracebackLexer
         self.pylexer = pylexer(**options)
         self.tblexer = tblexer(**options)
 
@@ -384,11 +377,10 @@ class IPythonConsoleLexer(Lexer):
         # Check for possible end of input
         in2_match = self.in2_regex.match(line)
         in2_match_rstrip = self.in2_regex_rstrip.match(line)
-        if (in2_match and in2_match.group().rstrip() == line.rstrip()) or \
-           in2_match_rstrip:
-            end_input = True
-        else:
-            end_input = False
+        end_input = bool(
+            (in2_match and in2_match.group().rstrip() == line.rstrip())
+            or in2_match_rstrip
+        )
         if end_input and self.mode != 'tb':
             # Only look for an end of input when not in tb mode.
             # An ellipsis could appear within the traceback.
@@ -483,16 +475,14 @@ class IPythonConsoleLexer(Lexer):
 
             if mode != self.mode:
                 # Yield buffered tokens before transitioning to new mode.
-                for token in self.buffered_tokens():
-                    yield token
+                yield from self.buffered_tokens()
                 self.mode = mode
 
             if insertion:
                 self.insertions.append((len(self.buffer), [insertion]))
             self.buffer += code
 
-        for token in self.buffered_tokens():
-            yield token
+        yield from self.buffered_tokens()
 
 class IPyLexer(Lexer):
     r"""
@@ -518,11 +508,7 @@ class IPyLexer(Lexer):
         # init docstring is necessary for docs not to fail to build do to parent
         # docs referenceing a section in pygments docs.
         self.python3 = get_bool_opt(options, 'python3', False)
-        if self.python3:
-            self.aliases = ['ipy3']
-        else:
-            self.aliases = ['ipy2', 'ipy']
-
+        self.aliases = ['ipy3'] if self.python3 else ['ipy2', 'ipy']
         Lexer.__init__(self, **options)
 
         self.IPythonLexer = IPythonLexer(**options)
@@ -535,6 +521,5 @@ class IPyLexer(Lexer):
             lex = self.IPythonConsoleLexer
         else:
             lex = self.IPythonLexer
-        for token in lex.get_tokens_unprocessed(text):
-            yield token
+        yield from lex.get_tokens_unprocessed(text)
 

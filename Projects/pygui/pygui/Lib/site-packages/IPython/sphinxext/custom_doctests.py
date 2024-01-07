@@ -75,12 +75,11 @@ def str_to_array(s):
         # Remove array( and )
         s = s[6:-1]
 
-    if s.startswith(u'['):
-        a = np.array(eval(s), dtype=float)
-    else:
-        # Assume its a regular float. Force 1D so we can index into it.
-        a = np.atleast_1d(float(s))
-    return a
+    return (
+        np.array(eval(s), dtype=float)
+        if s.startswith(u'[')
+        else np.atleast_1d(float(s))
+    )
 
 def float_doctest(sphinx_shell, args, input_lines, found, submitted):
     """

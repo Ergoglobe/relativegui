@@ -36,15 +36,11 @@ def mini_interactive_loop(input_func):
     # only illustrate the basic inner loop.
     while isp.push_accepts_more():
         indent = ' '*isp.get_indent_spaces()
-        prompt = '>>> ' + indent
+        prompt = f'>>> {indent}'
         line = indent + input_func(prompt)
         isp.push(line)
 
-    # Here we just return input so we can use it in a test suite, but a real
-    # interpreter would instead send it for execution somewhere.
-    src = isp.source_reset()
-    #print 'Input source was:\n', src  # dbg
-    return src
+    return isp.source_reset()
 
 #-----------------------------------------------------------------------------
 # Test utilities, just for local use
@@ -463,17 +459,20 @@ class IPythonInputTestCase(InputSplitterTestCase):
 
     def test_multiline_passthrough(self):
         isp = self.isp
+
+
         class CommentTransformer(InputTransformer):
             def __init__(self):
                 self._lines = []
 
             def push(self, line):
-                self._lines.append(line + '#')
+                self._lines.append(f'{line}#')
 
             def reset(self):
                 text = '\n'.join(self._lines)
                 self._lines = []
                 return text
+
 
         isp.physical_line_transforms.insert(0, CommentTransformer())
 
@@ -509,10 +508,7 @@ if __name__ == '__main__':
             prompt = start_prompt
             while isp.push_accepts_more():
                 indent = ' '*isp.get_indent_spaces()
-                if autoindent:
-                    line = indent + input(prompt+indent)
-                else:
-                    line = input(prompt)
+                line = indent + input(prompt+indent) if autoindent else input(prompt)
                 isp.push(line)
                 prompt = '... '
 

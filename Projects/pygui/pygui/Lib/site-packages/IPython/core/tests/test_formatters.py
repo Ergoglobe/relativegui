@@ -116,9 +116,9 @@ def test_for_type():
 
 def test_for_type_string():
     f = PlainTextFormatter()
-    
-    type_str = '%s.%s' % (C.__module__, 'C')
-    
+
+    type_str = f'{C.__module__}.C'
+
     # initial return, None
     assert f.for_type(type_str, foo_printer) is None
     # no func queries
@@ -154,8 +154,8 @@ def test_lookup():
 
 def test_lookup_string():
     f = PlainTextFormatter()
-    type_str = '%s.%s' % (C.__module__, 'C')
-    
+    type_str = f'{C.__module__}.C'
+
     f.for_type(type_str, foo_printer)
     assert f.lookup(C()) is foo_printer
     # should move from deferred to imported dict
@@ -171,18 +171,18 @@ def test_lookup_by_type():
 
 def test_lookup_by_type_string():
     f = PlainTextFormatter()
-    type_str = '%s.%s' % (C.__module__, 'C')
+    type_str = f'{C.__module__}.C'
     f.for_type(type_str, foo_printer)
-    
+
     # verify insertion
     assert _mod_name_key(C) in f.deferred_printers
     assert C not in f.type_printers
-    
+
     assert f.lookup_by_type(type_str) is foo_printer
     # lookup by string doesn't cause import
     assert _mod_name_key(C) in f.deferred_printers
     assert C not in f.type_printers
-    
+
     assert f.lookup_by_type(C) is foo_printer
     # should move from deferred to imported dict
     assert _mod_name_key(C) not in f.deferred_printers
@@ -191,13 +191,13 @@ def test_lookup_by_type_string():
 def test_in_formatter():
     f = PlainTextFormatter()
     f.for_type(C, foo_printer)
-    type_str = '%s.%s' % (C.__module__, 'C')
+    type_str = f'{C.__module__}.C'
     assert C in f
     assert type_str in f
 
 def test_string_in_formatter():
     f = PlainTextFormatter()
-    type_str = '%s.%s' % (C.__module__, 'C')
+    type_str = f'{C.__module__}.C'
     f.for_type(type_str, foo_printer)
     assert type_str in f
     assert C in f
@@ -219,11 +219,11 @@ def test_pop():
 
 def test_pop_string():
     f = PlainTextFormatter()
-    type_str = '%s.%s' % (C.__module__, 'C')
-    
+    type_str = f'{C.__module__}.C'
+
     with pytest.raises(KeyError):
         f.pop(type_str)
-    
+
     f.for_type(type_str, foo_printer)
     f.pop(type_str)
     with pytest.raises(KeyError):
@@ -406,20 +406,20 @@ def test_ipython_display_formatter():
     class NotSelfDisplaying(object):
         def __repr__(self):
             return "NotSelfDisplaying"
-        
+
         def _ipython_display_(self):
             raise NotImplementedError
-    
+
     save_enabled = f.ipython_display_formatter.enabled
     f.ipython_display_formatter.enabled = True
-    
+
     yes = SelfDisplaying()
     no = NotSelfDisplaying()
 
     d, md = f.format(no)
     assert d == {"text/plain": repr(no)}
     assert md == {}
-    assert catcher == []
+    assert not catcher
 
     d, md = f.format(yes)
     assert d == {}

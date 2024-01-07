@@ -203,16 +203,16 @@ def test_info():
     # case-insensitive comparison needed on some filesystems
     # e.g. Windows:
     assert i["file"].lower() == compress_user(fname).lower()
-    assert i["definition"] == None
+    assert i["definition"] is None
     assert i["docstring"] == Call.__doc__
-    assert i["source"] == None
+    assert i["source"] is None
     assert i["isclass"] is True
     assert i["init_definition"] == "Call(x, y=1)"
     assert i["init_docstring"] == Call.__init__.__doc__
 
     i = inspector.info(Call, detail_level=1)
     assert i["source"] is not None
-    assert i["docstring"] == None
+    assert i["docstring"] is None
 
     c = Call(1)
     c.__doc__ = "Modified instance docstring"

@@ -186,7 +186,7 @@ class TestMagicRunPass(tt.TempFileMixin):
         _ip = get_ipython()
         # This fails on Windows if self.tmpfile.name has spaces or "~" in it.
         # See below and ticket https://bugs.launchpad.net/bugs/366353
-        _ip.run_line_magic("run", "-p %s" % self.fname)
+        _ip.run_line_magic("run", f"-p {self.fname}")
 
     def test_builtins_id(self):
         """Check that %run doesn't damage __builtins__ """
@@ -217,19 +217,19 @@ class TestMagicRunPass(tt.TempFileMixin):
         # https://github.com/ipython/ipython/issues/10028
         _ip = get_ipython()
         with tt.fake_input(["c"]):
-            _ip.run_line_magic("run", "-d %s" % self.fname)
+            _ip.run_line_magic("run", f"-d {self.fname}")
         with tt.fake_input(["c"]):
-            _ip.run_line_magic("run", "-d %s" % self.fname)
+            _ip.run_line_magic("run", f"-d {self.fname}")
 
     def test_run_debug_twice_with_breakpoint(self):
         """Make a valid python temp file."""
         _ip = get_ipython()
         with tt.fake_input(["b 2", "c", "c"]):
-            _ip.run_line_magic("run", "-d %s" % self.fname)
+            _ip.run_line_magic("run", f"-d {self.fname}")
 
         with tt.fake_input(["c"]):
             with tt.AssertNotPrints("KeyError"):
-                _ip.run_line_magic("run", "-d %s" % self.fname)
+                _ip.run_line_magic("run", f"-d {self.fname}")
 
 
 class TestMagicRunSimple(tt.TempFileMixin):
@@ -274,7 +274,7 @@ class TestMagicRunSimple(tt.TempFileMixin):
                 "       ip.magic(%r)\n"
                 "   except NameError as e:\n"
                 "       print(i)\n"
-                "       break\n" % ("run " + empty.fname)
+                "       break\n" % f"run {empty.fname}"
             )
             self.mktmp(src)
             _ip.run_line_magic("run", str(self.fname))
@@ -323,14 +323,14 @@ tclass.py: deleting object: C-third
         self.mktmp(src)
         _ip.run_cell("zz = 23")
         try:
-            _ip.run_line_magic("run", "-i %s" % self.fname)
+            _ip.run_line_magic("run", f"-i {self.fname}")
             assert _ip.user_ns["yy"] == 23
         finally:
             _ip.run_line_magic("reset", "-f")
 
         _ip.run_cell("zz = 23")
         try:
-            _ip.run_line_magic("run", "-i %s" % self.fname)
+            _ip.run_line_magic("run", f"-i {self.fname}")
             assert _ip.user_ns["yy"] == 23
         finally:
             _ip.run_line_magic("reset", "-f")
@@ -339,7 +339,7 @@ tclass.py: deleting object: C-third
         """Check that files in odd encodings are accepted."""
         mydir = os.path.dirname(__file__)
         na = os.path.join(mydir, "nonascii.py")
-        _ip.magic('run "%s"' % na)
+        _ip.magic(f'run "{na}"')
         assert _ip.user_ns["u"] == "Ўт№Ф"
 
     def test_run_py_file_attribute(self):
@@ -378,8 +378,8 @@ tclass.py: deleting object: C-third
         """ Test that %run -t -N<N> does not raise a TypeError for N > 1."""
         src = "pass"
         self.mktmp(src)
-        _ip.run_line_magic("run", "-t -N 1 %s" % self.fname)
-        _ip.run_line_magic("run", "-t -N 10 %s" % self.fname)
+        _ip.run_line_magic("run", f"-t -N 1 {self.fname}")
+        _ip.run_line_magic("run", f"-t -N 10 {self.fname}")
 
     def test_ignore_sys_exit(self):
         """Test the -e option to ignore sys.exit()"""
@@ -389,7 +389,7 @@ tclass.py: deleting object: C-third
             _ip.run_line_magic("run", self.fname)
 
         with tt.AssertNotPrints("SystemExit"):
-            _ip.run_line_magic("run", "-e %s" % self.fname)
+            _ip.run_line_magic("run", f"-e {self.fname}")
 
     def test_run_nb(self):
         """Test %run notebook.ipynb"""
@@ -427,7 +427,7 @@ tclass.py: deleting object: C-third
         )
         src = writes(nb, version=4)
         self.mktmp(src, ext='.ipynb')
-        pytest.raises(Exception, _ip.magic, "run %s" % self.fname)
+        pytest.raises(Exception, _ip.magic, f"run {self.fname}")
 
     def test_file_options(self):
         src = ('import sys\n'
@@ -449,7 +449,9 @@ class TestMagicRunWithPackage(unittest.TestCase):
             f.write(textwrap.dedent(content))
 
     def setUp(self):
-        self.package = package = 'tmp{0}'.format(''.join([random.choice(string.ascii_letters) for i in range(10)]))
+        self.package = package = 'tmp{0}'.format(
+            ''.join([random.choice(string.ascii_letters) for _ in range(10)])
+        )
         """Temporary  (probably) valid python package name."""
 
         self.value = int(random.random() * 10000)
@@ -537,14 +539,14 @@ def test_run__name__():
             f.write("q = __name__")
 
         _ip.user_ns.pop("q", None)
-        _ip.run_line_magic("run", "{}".format(path))
+        _ip.run_line_magic("run", f"{path}")
         assert _ip.user_ns.pop("q") == "__main__"
 
-        _ip.run_line_magic("run", "-n {}".format(path))
+        _ip.run_line_magic("run", f"-n {path}")
         assert _ip.user_ns.pop("q") == "foo"
 
         try:
-            _ip.run_line_magic("run", "-i -n {}".format(path))
+            _ip.run_line_magic("run", f"-i -n {path}")
             assert _ip.user_ns.pop("q") == "foo"
         finally:
             _ip.run_line_magic("reset", "-f")
@@ -567,7 +569,7 @@ def test_run_tb():
                 )
             )
         with capture_output() as io:
-            _ip.run_line_magic("run", "{}".format(path))
+            _ip.run_line_magic("run", f"{path}")
         out = io.stdout
         assert "execfile" not in out
         assert "RuntimeError" in out

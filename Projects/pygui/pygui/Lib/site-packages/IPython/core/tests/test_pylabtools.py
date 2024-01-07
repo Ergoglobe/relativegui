@@ -53,7 +53,7 @@ def _check_pil_jpeg_bytes():
         img.save(buf, 'jpeg')
     except Exception as e:
         ename = e.__class__.__name__
-        raise pytest.skip("PIL can't write JPEG to BytesIO: %s: %s" % (ename, e)) from e
+        raise pytest.skip(f"PIL can't write JPEG to BytesIO: {ename}: {e}") from e
 
 @dec.skip_without("PIL.Image")
 def test_figure_to_jpeg():
@@ -69,7 +69,7 @@ def test_figure_to_jpeg():
 def test_retina_figure():
     # simple empty-figure test
     fig = plt.figure()
-    assert pt.retina_figure(fig) == None
+    assert pt.retina_figure(fig) is None
     plt.close('all')
 
     fig = plt.figure()
@@ -218,11 +218,11 @@ class TestPylabSwitch(object):
         s = self.Shell()
         gui, backend = s.enable_matplotlib("inline")
         assert gui == "inline"
-        assert s.pylab_gui_select == None
+        assert s.pylab_gui_select is None
 
         gui, backend = s.enable_matplotlib("inline")
         assert gui == "inline"
-        assert s.pylab_gui_select == None
+        assert s.pylab_gui_select is None
 
         gui, backend = s.enable_matplotlib("qt")
         assert gui == "qt"

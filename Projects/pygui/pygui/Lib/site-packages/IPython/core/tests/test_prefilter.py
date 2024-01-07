@@ -32,15 +32,15 @@ def test_prefilter_shadowed():
         # These should not be transformed - they are shadowed by other names
         for name in ['if', 'zip', 'get_ipython']: # keyword, builtin, global
             ip.register_magic_function(dummy_magic, magic_name=name)
-            res = ip.prefilter(name + " foo")
-            assert res == name + " foo"
+            res = ip.prefilter(f"{name} foo")
+            assert res == f"{name} foo"
             del ip.magics_manager.magics["line"][name]
 
         # These should be transformed
         for name in ['fi', 'piz', 'nohtypi_teg']:
             ip.register_magic_function(dummy_magic, magic_name=name)
-            res = ip.prefilter(name + " foo")
-            assert res != name + " foo"
+            res = ip.prefilter(f"{name} foo")
+            assert res != f"{name} foo"
             del ip.magics_manager.magics["line"][name]
 
     finally:

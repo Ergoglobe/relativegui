@@ -248,8 +248,7 @@ class PrefilterManager(Configurable):
         """Find a handler for the line_info by trying checkers."""
         for checker in self.checkers:
             if checker.enabled:
-                handler = checker.check(line_info)
-                if handler:
+                if handler := checker.check(line_info):
                     return handler
         return self.get_handler_by_name('normal')
 
@@ -282,7 +281,7 @@ class PrefilterManager(Configurable):
             return ''
 
         # At this point, we invoke our transformers.
-        if not continue_prompt or (continue_prompt and self.multi_line_specials):
+        if not continue_prompt or self.multi_line_specials:
             line = self.transform_line(line, continue_prompt)
 
         # Now we compute line_info for the checkers and handlers
@@ -299,9 +298,7 @@ class PrefilterManager(Configurable):
         if continue_prompt and not self.multi_line_specials:
             return normal_handler.handle(line_info)
 
-        prefiltered = self.prefilter_line_info(line_info)
-        # print "prefiltered line: %r" % prefiltered
-        return prefiltered
+        return self.prefilter_line_info(line_info)
 
     def prefilter_lines(self, lines, continue_prompt=False):
         """Prefilter multiple input lines of text.
@@ -315,18 +312,16 @@ class PrefilterManager(Configurable):
         entry and presses enter.
         """
         llines = lines.rstrip('\n').split('\n')
-        # We can get multiple lines in one shot, where multiline input 'blends'
-        # into one line, in cases like recalling from the readline history
-        # buffer.  We need to make sure that in such cases, we correctly
-        # communicate downstream which line is first and which are continuation
-        # ones.
-        if len(llines) > 1:
-            out = '\n'.join([self.prefilter_line(line, lnum>0)
-                             for lnum, line in enumerate(llines) ])
-        else:
-            out = self.prefilter_line(llines[0], continue_prompt)
-
-        return out
+        return (
+            '\n'.join(
+                [
+                    self.prefilter_line(line, lnum > 0)
+                    for lnum, line in enumerate(llines)
+                ]
+            )
+            if len(llines) > 1
+            else self.prefilter_line(llines[0], continue_prompt)
+        )
 
 #-----------------------------------------------------------------------------
 # Prefilter transformers
@@ -505,7 +500,9 @@ class AutocallChecker(PrefilterChecker):
         ignored_funs = ['b', 'f', 'r', 'u', 'br', 'rb', 'fr', 'rf']
         ifun = line_info.ifun
         line = line_info.line
-        if ifun.lower() in ignored_funs and (line.startswith(ifun + "'") or line.startswith(ifun + '"')):
+        if ifun.lower() in ignored_funs and (
+            line.startswith(f"{ifun}'") or line.startswith(f'{ifun}"')
+        ):
             return None
 
         if (
@@ -561,7 +558,7 @@ class PrefilterHandler(Configurable):
         return line
 
     def __str__(self):
-        return "<%s(name=%s)>" % (self.__class__.__name__, self.handler_name)
+        return f"<{self.__class__.__name__}(name={self.handler_name})>"
 
 
 class MacroHandler(PrefilterHandler):
@@ -584,11 +581,14 @@ class MagicHandler(PrefilterHandler):
         ifun    = line_info.ifun
         the_rest = line_info.the_rest
         #Prepare arguments for get_ipython().run_line_magic(magic_name, magic_args)
-        t_arg_s = ifun + " " + the_rest
+        t_arg_s = f"{ifun} {the_rest}"
         t_magic_name, _, t_magic_arg_s = t_arg_s.partition(' ')
         t_magic_name = t_magic_name.lstrip(ESC_MAGIC)
-        cmd = '%sget_ipython().run_line_magic(%r, %r)' % (line_info.pre_whitespace, t_magic_name, t_magic_arg_s)
-        return cmd
+        return '%sget_ipython().run_line_magic(%r, %r)' % (
+            line_info.pre_whitespace,
+            t_magic_name,
+            t_magic_arg_s,
+        )
 
 
 class AutoHandler(PrefilterHandler):
@@ -609,8 +609,6 @@ class AutoHandler(PrefilterHandler):
         if continue_prompt:
             return line
 
-        force_auto = isinstance(obj, IPyAutocall)
-
         # User objects sometimes raise exceptions on attribute access other
         # than AttributeError (we've seen it in the past), so it's safest to be
         # ultra-conservative here and catch all.
@@ -621,35 +619,36 @@ class AutoHandler(PrefilterHandler):
 
         if esc == ESC_QUOTE:
             # Auto-quote splitting on whitespace
-            newcmd = '%s("%s")' % (ifun,'", "'.join(the_rest.split()) )
+            newcmd = f"""{ifun}("{'", "'.join(the_rest.split())}")"""
         elif esc == ESC_QUOTE2:
             # Auto-quote whole string
-            newcmd = '%s("%s")' % (ifun,the_rest)
+            newcmd = f'{ifun}("{the_rest}")'
         elif esc == ESC_PAREN:
-            newcmd = '%s(%s)' % (ifun,",".join(the_rest.split()))
+            newcmd = f'{ifun}({",".join(the_rest.split())})'
         else:
+            force_auto = isinstance(obj, IPyAutocall)
+
             # Auto-paren.
             if force_auto:
                 # Don't rewrite if it is already a call.
                 do_rewrite = not the_rest.startswith('(')
+            elif not the_rest:
+                # We only apply it to argument-less calls if the autocall
+                # parameter is set to 2.
+                do_rewrite = (self.shell.autocall >= 2)
+            elif the_rest.startswith('[') and hasattr(obj, '__getitem__'):
+                # Don't autocall in this case: item access for an object
+                # which is BOTH callable and implements __getitem__.
+                do_rewrite = False
             else:
-                if not the_rest:
-                    # We only apply it to argument-less calls if the autocall
-                    # parameter is set to 2.
-                    do_rewrite = (self.shell.autocall >= 2)
-                elif the_rest.startswith('[') and hasattr(obj, '__getitem__'):
-                    # Don't autocall in this case: item access for an object
-                    # which is BOTH callable and implements __getitem__.
-                    do_rewrite = False
-                else:
-                    do_rewrite = True
+                do_rewrite = True
 
             # Figure out the rewritten command
             if do_rewrite:
                 if the_rest.endswith(';'):
-                    newcmd = '%s(%s);' % (ifun.rstrip(),the_rest[:-1])
+                    newcmd = f'{ifun.rstrip()}({the_rest[:-1]});'
                 else:
-                    newcmd = '%s(%s)' % (ifun.rstrip(), the_rest)
+                    newcmd = f'{ifun.rstrip()}({the_rest})'
             else:
                 normal_handler = self.prefilter_manager.get_handler_by_name('normal')
                 return normal_handler.handle(line_info)

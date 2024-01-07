@@ -163,12 +163,9 @@ def test_magic_parse_options():
     ip = get_ipython()
     path = 'c:\\x'
     m = DummyMagics(ip)
-    opts = m.parse_options('-f %s' % path,'f:')[0]
+    opts = m.parse_options(f'-f {path}', 'f:')[0]
     # argv splitting is os-dependent
-    if os.name == 'posix':
-        expected = 'c:x'
-    else:
-        expected = path
+    expected = 'c:x' if os.name == 'posix' else path
     assert opts["f"] == expected
 
 
@@ -268,7 +265,7 @@ def test_hist_pof():
     #raise Exception(list(ip.history_manager._get_range_session()))
     with TemporaryDirectory() as td:
         tf = os.path.join(td, 'hist.py')
-        ip.run_line_magic('history', '-pof %s' % tf)
+        ip.run_line_magic('history', f'-pof {tf}')
         assert os.path.isfile(tf)
 
 
@@ -590,11 +587,11 @@ def test_dirops():
     startdir = os.getcwd()
     ipdir = os.path.realpath(_ip.ipython_dir)
     try:
-        _ip.run_line_magic("cd", '"%s"' % ipdir)
+        _ip.run_line_magic("cd", f'"{ipdir}"')
         assert curpath() == ipdir
         _ip.run_line_magic("cd", "-")
         assert curpath() == startdir
-        _ip.run_line_magic("pushd", '"%s"' % ipdir)
+        _ip.run_line_magic("pushd", f'"{ipdir}"')
         assert curpath() == ipdir
         _ip.run_line_magic("popd", "")
         assert curpath() == startdir
@@ -612,7 +609,7 @@ def test_cd_force_quiet():
 
     try:
         with tt.AssertNotPrints(ipdir):
-            osmagics.cd('"%s"' % ipdir)
+            osmagics.cd(f'"{ipdir}"')
         with tt.AssertNotPrints(startdir):
             osmagics.cd('-')
     finally:
@@ -622,7 +619,7 @@ def test_cd_force_quiet():
 def test_xmode():
     # Calling xmode three times should be a no-op
     xmode = _ip.InteractiveTB.mode
-    for i in range(4):
+    for _ in range(4):
         _ip.run_line_magic("xmode", "")
     assert _ip.InteractiveTB.mode == xmode
 
@@ -637,7 +634,7 @@ def test_reset_hard():
     _ip.user_ns["a"] = A()
     _ip.run_cell("a")
 
-    assert monitor == []
+    assert not monitor
     _ip.run_line_magic("reset", "-f")
     assert monitor == [1]
 
@@ -651,7 +648,7 @@ class TestXdel(tt.TempFileMixin):
                "a = A()\n")
         self.mktmp(src)
         # %run creates some hidden references...
-        _ip.run_line_magic("run", "%s" % self.fname)
+        _ip.run_line_magic("run", f"{self.fname}")
         # ... as does the displayhook.
         _ip.run_cell("a")
 
@@ -853,7 +850,7 @@ def test_notebook_export_json():
         _ip.history_manager.store_inputs(i, cmd)
     with TemporaryDirectory() as td:
         outfile = os.path.join(td, "nb.ipynb")
-        _ip.run_line_magic("notebook", "%s" % outfile)
+        _ip.run_line_magic("notebook", f"{outfile}")
 
 
 class TestEnv(TestCase):
@@ -912,7 +909,7 @@ class CellMagicTestCase(TestCase):
         out = _ip.run_cell_magic(magic, "a", "b")
         assert out == ("a", "b")
         # Via run_cell, it goes into the user's namespace via displayhook
-        _ip.run_cell("%%" + magic + " c\nd\n")
+        _ip.run_cell(f"%%{magic}" + " c\nd\n")
         assert _ip.user_ns["_"] == ("c", "d\n")
 
     def test_cell_magic_func_deco(self):
@@ -956,7 +953,7 @@ class CellMagicTestCase(TestCase):
         self.check_ident('cellm4')
         # Check that nothing is registered as 'cellm33'
         c33 = _ip.find_cell_magic('cellm33')
-        assert c33 == None
+        assert c33 is None
 
 def test_file():
     """Basic %%writefile"""
@@ -1073,7 +1070,7 @@ def test_file_amend():
         )
         ip.run_cell_magic(
             "writefile",
-            "-a %s" % fname,
+            f"-a {fname}",
             "\n".join(
                 [
                     "line3",
@@ -1093,7 +1090,7 @@ def test_file_spaces():
         fname = "file name"
         ip.run_cell_magic(
             "file",
-            '"%s"' % fname,
+            f'"{fname}"',
             "\n".join(
                 [
                     "line1",
@@ -1223,12 +1220,10 @@ class FooFoo(Magics):
     @line_magic('foo')
     def line_foo(self, line):
         "I am line foo"
-        pass
 
     @cell_magic("foo")
     def cell_foo(self, line, cell):
         "I am cell foo, not line foo"
-        pass
 
 def test_line_cell_info():
     """%%foo and %foo magics are distinguishable to inspect"""
@@ -1295,11 +1290,11 @@ def test_save():
         ip.history_manager.store_inputs(i, cmd)
     with TemporaryDirectory() as tmpdir:
         file = os.path.join(tmpdir, "testsave.py")
-        ip.run_line_magic("save", "%s 1-10" % file)
+        ip.run_line_magic("save", f"{file} 1-10")
         content = Path(file).read_text(encoding="utf-8")
         assert content.count(cmds[0]) == 1
         assert "coding: utf-8" in content
-        ip.run_line_magic("save", "-a %s 1-10" % file)
+        ip.run_line_magic("save", f"-a {file} 1-10")
         content = Path(file).read_text(encoding="utf-8")
         assert content.count(cmds[0]) == 2
         assert "coding: utf-8" in content
@@ -1427,8 +1422,7 @@ def test_logging_magic_quiet_from_arg():
     with TemporaryDirectory() as td:
         try:
             with tt.AssertNotPrints(re.compile("Activating.*")):
-                lm.logstart('-q {}'.format(
-                        os.path.join(td, "quiet_from_arg.log")))
+                lm.logstart(f'-q {os.path.join(td, "quiet_from_arg.log")}')
         finally:
             _ip.logger.logstop()
 

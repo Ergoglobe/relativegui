@@ -97,7 +97,7 @@ class Fixture(TestCase):
         module_name = "tmpmod_" + "".join(random.sample(self.filename_chars, 20))
         if module_name in sys.modules:
             del sys.modules[module_name]
-        file_name = os.path.join(self.test_dir, module_name + ".py")
+        file_name = os.path.join(self.test_dir, f"{module_name}.py")
         return module_name, file_name
 
     def write_file(self, filename, content):
@@ -174,9 +174,7 @@ class TestAutoreload(Fixture):
                             """
             ),
         )
-        with tt.AssertNotPrints(
-            ("[autoreload of %s failed:" % mod_name), channel="stderr"
-        ):
+        with tt.AssertNotPrints(f"[autoreload of {mod_name} failed:", channel="stderr"):
             self.shell.run_code("pass")  # trigger another reload
 
     def test_reload_class_type(self):
@@ -191,7 +189,7 @@ class TestAutoreload(Fixture):
         assert "test" not in self.shell.ns
         assert "result" not in self.shell.ns
 
-        self.shell.run_code("from %s import Test" % mod_name)
+        self.shell.run_code(f"from {mod_name} import Test")
         self.shell.run_code("test = Test()")
 
         self.write_file(
@@ -233,7 +231,7 @@ class TestAutoreload(Fixture):
                             """
             )
         )
-        self.shell.run_code("from %s import MyClass" % mod_name)
+        self.shell.run_code(f"from {mod_name} import MyClass")
         self.shell.run_code("first = MyClass(5)")
         self.shell.run_code("first.square()")
         with self.assertRaises(AttributeError):
@@ -289,7 +287,7 @@ class TestAutoreload(Fixture):
                             """
             )
         )
-        self.shell.run_code("from %s import MyClass" % mod_name)
+        self.shell.run_code(f"from {mod_name} import MyClass")
         self.shell.run_code("first = MyClass()")
 
         # change property `a`
@@ -305,9 +303,7 @@ class TestAutoreload(Fixture):
             ),
         )
 
-        with tt.AssertNotPrints(
-            ("[autoreload of %s failed:" % mod_name), channel="stderr"
-        ):
+        with tt.AssertNotPrints(f"[autoreload of {mod_name} failed:", channel="stderr"):
             self.shell.run_code("pass")  # trigger another reload
 
     def test_autoload_newly_added_objects(self):
@@ -531,7 +527,7 @@ class Bar:    # old-style class: weakref doesn't work for it on Python < 2.7
                 self.shell.magic_aimport("tmpmod_as318989e89ds")
         else:
             self.shell.magic_autoreload("2")
-            self.shell.run_code("import %s" % mod_name)
+            self.shell.run_code(f"import {mod_name}")
             stream = StringIO()
             self.shell.magic_aimport("", stream=stream)
             self.assertTrue(
@@ -578,13 +574,9 @@ a syntax error
 """,
         )
 
-        with tt.AssertPrints(
-            ("[autoreload of %s failed:" % mod_name), channel="stderr"
-        ):
+        with tt.AssertPrints(f"[autoreload of {mod_name} failed:", channel="stderr"):
             self.shell.run_code("pass")  # trigger reload
-        with tt.AssertNotPrints(
-            ("[autoreload of %s failed:" % mod_name), channel="stderr"
-        ):
+        with tt.AssertNotPrints(f"[autoreload of {mod_name} failed:", channel="stderr"):
             self.shell.run_code("pass")  # trigger another reload
         check_module_contents()
 
@@ -650,7 +642,7 @@ class Bar:    # old-style class
         # Disable autoreload and rewrite module: no reload should occur
         #
         if use_aimport:
-            self.shell.magic_aimport("-" + mod_name)
+            self.shell.magic_aimport(f"-{mod_name}")
             stream = StringIO()
             self.shell.magic_aimport("", stream=stream)
             self.assertTrue(("Modules to skip:\n%s" % mod_name) in stream.getvalue())
